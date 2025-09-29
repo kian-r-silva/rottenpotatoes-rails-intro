@@ -7,16 +7,21 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.all_ratings
-  
+    @all_ratings = Movie.distinct.pluck(:rating)
     if params[:ratings].present?
       @ratings_to_show = params[:ratings].keys
-      @movies = Movie.with_ratings(@ratings_to_show)
+      @movies = Movie.where(rating: @ratings_to_show)
     else
       @ratings_to_show = @all_ratings
       @movies = Movie.all
     end
+  
+    @sort_by = params[:sort_by]
+    if @sort_by.present?
+      @movies = @movies.order(@sort_by)
+    end
   end
+  
   
 
   def new
