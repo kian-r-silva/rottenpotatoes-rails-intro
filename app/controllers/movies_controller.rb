@@ -7,20 +7,45 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.distinct.pluck(:rating)
+    # Step 1: handle ratings filter
     if params[:ratings].present?
       @ratings_to_show = params[:ratings].keys
-      @movies = Movie.where(rating: @ratings_to_show)
+    elsif session[:ratings].present?
+      # if params missing but session has value, use session
+      @ratings_to_show = session[:ratings].keys
+      params[:ratings] = session[:ratings]
     else
-      @ratings_to_show = @all_ratings
-      @movies = Movie.all
+      # default = show all ratings
+      @ratings_to_show = Movie.all.pluck(:rating).uniq
     end
   
-    @sort_by = params[:sort_by]
-    if @sort_by.present?
-      @movies = @movies.order(@sort_by)
+    # Step 2: handle sort_by
+    if params[:sort_by].present?
+      @sort_by = params[:sort_by]
+    elsif session[:sort_by].present?
+      @sort_by = session[:sort_by]
+      params[:sort_by] = session[:sort_by]
+    else
+      @sort_by = nil
     end
+  
+    # Step 3: persist into session
+    session[:ratings] = params[:ratings]
+    session[:sort_by] = @sort_by
+  
+    # Step 4: fetch movies
+    if @sort_by.present?
+      @movies = Movie.where(rating: @ratings_to_show).order(@sort_by)
+    else
+      @movies = Movie.where(rating: @ratings_to_show)
+    end
+  
+    # Step 5: for view checkboxes
+    @all_ratings = Movie.all.pluck(:rating).uniq
   end
+  
+  
+  
   
   
 
