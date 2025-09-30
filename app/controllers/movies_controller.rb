@@ -9,14 +9,16 @@ class MoviesController < ApplicationController
   def index
     # Step 1: handle ratings filter
     if params[:ratings].present?
+      # params[:ratings] is a Hash → convert to keys array
       @ratings_to_show = params[:ratings].keys
     elsif session[:ratings].present?
-      # if params missing but session has value, use session
+      # session[:ratings] is stored as a Hash, so use its keys
       @ratings_to_show = session[:ratings].keys
       params[:ratings] = session[:ratings]
     else
       # default = show all ratings
       @ratings_to_show = Movie.all.pluck(:rating).uniq
+      params[:ratings] = Hash[@ratings_to_show.product(["1"])]
     end
   
     # Step 2: handle sort_by
@@ -43,10 +45,6 @@ class MoviesController < ApplicationController
     # Step 5: for view checkboxes
     @all_ratings = Movie.all.pluck(:rating).uniq
   end
-  
-  
-  
-  
   
 
   def new
